@@ -43,6 +43,25 @@ const App = {
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
   },
 
+  // Two-part due display: a bold day ("Tomorrow", "Fri 9/4") + a quiet time.
+  fmtDueParts(ts, allDay) {
+    if (!ts) return { day: '', time: '' };
+    const now = Date.now();
+    const d = new Date(ts);
+    const today0 = App.startOfDay(now);
+    const days = Math.round((App.startOfDay(ts) - today0) / App.DAY);
+    const time = allDay ? '' :
+      `${d.getHours() % 12 || 12}${d.getMinutes() ? ':' + String(d.getMinutes()).padStart(2, '0') : ''}${d.getHours() < 12 ? 'am' : 'pm'}`;
+    const wd = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][d.getDay()];
+    let day;
+    if (days === 0) day = 'Today';
+    else if (days === 1) day = 'Tomorrow';
+    else if (days === -1) day = 'Yesterday';
+    else if (days > 1 && days < 7) day = wd;
+    else day = `${wd} ${d.getMonth() + 1}/${d.getDate()}`;
+    return { day, time };
+  },
+
   fmtDue(ts, allDay) {
     if (!ts) return '';
     const now = Date.now();

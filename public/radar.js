@@ -62,13 +62,18 @@ App.views.radar = {
         </div>
       </div>`;
 
+    const card = (label, cls, rows) =>
+      `<section class="group-card ${cls}">
+        <header class="group-head ${cls}"><span class="g-dot"></span>${label} <span class="count">${rows.length}</span></header>
+        ${rows.map((i) => App.views.radar.rowHtml(i, nextUp)).join('')}
+      </section>`;
+
     let any = false;
     for (const g of groups) {
       const rows = active.filter(g.test);
       if (!rows.length) continue;
       any = true;
-      html += `<div class="group-head ${g.cls}">${g.label} <span class="count">${rows.length}</span></div>`;
-      html += rows.map((i) => App.views.radar.rowHtml(i, nextUp)).join('');
+      html += card(g.label, g.cls, rows);
     }
 
     // Everything beyond two weeks stays out of the way: one collapsed section,
@@ -82,10 +87,9 @@ App.views.radar = {
         if (!months.length || months[months.length - 1].label !== label) months.push({ label, items: [] });
         months[months.length - 1].items.push(i);
       }
-      html += `<details class="later-rail"><summary>Later <span class="count">${later.length} items, ${App.esc(months[0].label)}–${App.esc(months[months.length - 1].label)}</span></summary>`;
+      html += `<details class="later-rail"><summary>Later <span class="count">${later.length} items · ${App.esc(months[0].label)} – ${App.esc(months[months.length - 1].label)}</span></summary>`;
       for (const m of months) {
-        html += `<div class="group-head sub">${App.esc(m.label)} <span class="count">${m.items.length}</span></div>`;
-        html += m.items.map((i) => App.views.radar.rowHtml(i, nextUp)).join('');
+        html += card(m.label, 'sub', m.items);
       }
       html += '</details>';
     }
@@ -93,12 +97,9 @@ App.views.radar = {
     if (undated.length) {
       any = true;
       if (undated.length > 5) {
-        html += `<details class="later-rail"><summary>No date <span class="count">${undated.length}</span></summary>`;
-        html += undated.map((i) => App.views.radar.rowHtml(i, nextUp)).join('');
-        html += '</details>';
+        html += `<details class="later-rail"><summary>No date <span class="count">${undated.length}</span></summary>${card('No date', 'sub', undated)}</details>`;
       } else {
-        html += `<div class="group-head">No date <span class="count">${undated.length}</span></div>`;
-        html += undated.map((i) => App.views.radar.rowHtml(i, nextUp)).join('');
+        html += card('No date', '', undated);
       }
     }
 
@@ -131,22 +132,38 @@ App.views.radar = {
 
   rowHtml(i, nextUp, muted = false) {
     const dueCls = !i.due_at ? '' : i.due_at < Date.now() ? 'past' : i.due_at < Date.now() + 36 * 3600000 ? 'soon' : '';
-    const est = i.estimate_min ? `${i.estimate_min >= 60 ? (i.estimate_min / 60).toFixed(i.estimate_min % 60 ? 1 : 0) + 'h' : i.estimate_min + 'm'}` : '~';
+    const { day, time } = App.fmtDueParts(i.due_at, i.all_day);
+    const est = i.estimate_min
+      ? (i.estimate_min >= 60 ? (i.estimate_min / 60).toFixed(i.estimate_min % 60 ? 1 : 0) + 'h' : i.estimate_min + 'm')
+      : 'estimate';
+
+    // One quiet meta line instead of a chip parade: course · sources · type · points · estimate.
+    const srcLink = (s, url) => url
+      ? `<a class="m-src src-${s}" href="${App.esc(url)}" target="_blank">${App.sourceName(s)}</a>`
+      : `<span class="m-src src-${s}">${App.sourceName(s)}</span>`;
+    const meta = [
+      i.course_code ? `<span class="m-course">${App.esc(i.course_code)}</span>` : null,
+      [srcLink(i.source, i.url), ...(i.also || []).map((a) => srcLink(a.source, a.url))].join(' + '),
+      i.kind === 'quiz' ? '<span class="m-kind">quiz/exam</span>' : null,
+      i.points ? `<span>${i.points} pts</span>` : null,
+      `<span class="m-est" data-act="estimate" title="time estimate — feeds Plan my day">${est}</span>`,
+    ].filter(Boolean).join('<span class="m-sep">·</span>');
+
     return `
     <div class="item-row ${muted ? 'done-row' : ''} ${nextUp.has(i.id) ? 'next-up' : ''}" id="item-${i.id}" data-id="${i.id}">
       <button class="status-btn ${i.status}" data-act="status" title="${i.status.replace('_', ' ')} — click to advance"></button>
-      ${nextUp.has(i.id) ? '<span class="next-chip">NEXT</span>' : ''}
-      <span class="i-title">${i.url ? `<a href="${App.esc(i.url)}" target="_blank">${App.esc(i.title)}</a>` : App.esc(i.title)}</span>
-      ${i.course_code ? `<span class="chip course">${App.esc(i.course_code)}</span>` : ''}
-      <span class="chip src-${i.source}">${App.sourceName(i.source)}</span>
-      ${(i.also || []).map((a) => a.url
-        ? `<a class="chip src-${a.source}" href="${App.esc(a.url)}" target="_blank" title="also on ${App.sourceName(a.source)} — open">${App.sourceName(a.source)}</a>`
-        : `<span class="chip src-${a.source}" title="also on ${App.sourceName(a.source)}">${App.sourceName(a.source)}</span>`).join('')}
-      ${i.kind === 'quiz' ? '<span class="chip">quiz</span>' : ''}
-      ${i.points ? `<span class="chip pts">${i.points}pt</span>` : ''}
-      ${i.submitted_any ? '<span class="chip submitted">submitted ✓</span>' : ''}
-      <span class="chip est" data-act="estimate" title="time estimate — feeds Plan my day">${est}</span>
-      <span class="i-due ${dueCls}">${App.fmtDue(i.due_at, i.all_day)}</span>
+      <div class="i-main">
+        <div class="i-top">
+          ${nextUp.has(i.id) ? '<span class="next-chip">NEXT</span>' : ''}
+          <span class="i-title">${i.url ? `<a href="${App.esc(i.url)}" target="_blank">${App.esc(i.title)}</a>` : App.esc(i.title)}</span>
+          ${i.submitted_any ? '<span class="chip submitted">submitted ✓</span>' : ''}
+        </div>
+        <div class="i-meta">${meta}</div>
+      </div>
+      <div class="i-when ${dueCls}">
+        <div class="w-day">${day}</div>
+        ${time ? `<div class="w-time">${time}</div>` : ''}
+      </div>
       ${i.url ? `<a class="row-link" href="${App.esc(i.url)}" target="_blank" title="open the assignment">↗</a>` : '<span class="row-link-gap"></span>'}
       <button class="row-x" data-act="remove" title="${i.source === 'manual' ? 'delete task' : 'hide from radar'}">✕</button>
     </div>`;
