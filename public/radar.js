@@ -40,9 +40,11 @@ App.views.radar = {
       { key: 'today', label: 'Due today', cls: 'today', test: (i) => i.due_at && i.due_at >= now && i.due_at < today0 + App.DAY },
       { key: 'tomorrow', label: 'Due tomorrow', cls: '', test: (i) => i.due_at >= today0 + App.DAY && i.due_at < today0 + 2 * App.DAY },
       { key: 'week', label: 'This week', cls: '', test: (i) => i.due_at >= today0 + 2 * App.DAY && i.due_at < today0 + 8 * App.DAY },
-      { key: 'later', label: 'Later', cls: '', test: (i) => i.due_at >= today0 + 8 * App.DAY },
-      { key: 'undated', label: 'No date', cls: '', test: (i) => !i.due_at },
+      { key: 'nextweek', label: 'Next week', cls: '', test: (i) => i.due_at >= today0 + 8 * App.DAY && i.due_at < today0 + 15 * App.DAY },
     ];
+    const later = active.filter((i) => i.due_at >= today0 + 15 * App.DAY)
+      .sort((a, b) => a.due_at - b.due_at);
+    const undated = active.filter((i) => !i.due_at);
 
     let html = `
       <div id="quickbar">
@@ -67,6 +69,37 @@ App.views.radar = {
       any = true;
       html += `<div class="group-head ${g.cls}">${g.label} <span class="count">${rows.length}</span></div>`;
       html += rows.map((i) => App.views.radar.rowHtml(i, nextUp)).join('');
+    }
+
+    // Everything beyond two weeks stays out of the way: one collapsed section,
+    // structured by month, so the radar reads as "now", not "the semester".
+    if (later.length) {
+      any = true;
+      const months = [];
+      for (const i of later) {
+        const d = new Date(i.due_at);
+        const label = d.toLocaleDateString(undefined, { month: 'long', year: d.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined });
+        if (!months.length || months[months.length - 1].label !== label) months.push({ label, items: [] });
+        months[months.length - 1].items.push(i);
+      }
+      html += `<details class="later-rail"><summary>Later <span class="count">${later.length} items, ${App.esc(months[0].label)}–${App.esc(months[months.length - 1].label)}</span></summary>`;
+      for (const m of months) {
+        html += `<div class="group-head sub">${App.esc(m.label)} <span class="count">${m.items.length}</span></div>`;
+        html += m.items.map((i) => App.views.radar.rowHtml(i, nextUp)).join('');
+      }
+      html += '</details>';
+    }
+
+    if (undated.length) {
+      any = true;
+      if (undated.length > 5) {
+        html += `<details class="later-rail"><summary>No date <span class="count">${undated.length}</span></summary>`;
+        html += undated.map((i) => App.views.radar.rowHtml(i, nextUp)).join('');
+        html += '</details>';
+      } else {
+        html += `<div class="group-head">No date <span class="count">${undated.length}</span></div>`;
+        html += undated.map((i) => App.views.radar.rowHtml(i, nextUp)).join('');
+      }
     }
 
     if (!any) {

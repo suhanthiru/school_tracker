@@ -168,6 +168,17 @@ label.check { display: flex; align-items: center; gap: 5px; color: var(--dim); f
 
 .empty-note { color: var(--faint); padding: 30px 10px; text-align: center; }
 
+.later-rail { margin-top: 20px; }
+.later-rail > summary {
+  cursor: pointer; list-style: none;
+  font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .09em;
+  color: var(--faint); padding: 4px 0;
+}
+.later-rail > summary::before { content: '▸ '; }
+.later-rail[open] > summary::before { content: '▾ '; }
+.later-rail > summary:hover { color: var(--dim); }
+.group-head.sub { margin: 12px 0 4px 8px; color: var(--faint); font-size: 10.5px; }
+
 /* ---------- week ---------- */
 
 .cal-nav { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }

@@ -163,19 +163,28 @@ function createApp() {
       const now = Date.now();
       const isToday = dateStr === notify.localDate(now);
 
+      // Only genuinely-now work: overdue, due in the next ~3 days, already
+      // started, or a manual task. Far-future syllabus/Canvas items have no
+      // business in today's plan.
+      const horizon = dayEnd + 2 * 24 * 3600 * 1000;
       const tasks = db.listItems({ kinds: ['assignment', 'quiz', 'task'] })
-        .filter((i) => i.due_at === null || i.due_at < dayEnd + 7 * 24 * 3600 * 1000)
         .filter((i) => i.submitted !== true)
-        .slice(0, 15)
+        .filter((i) => {
+          if (i.status === 'in_progress') return true;
+          if (i.due_at !== null) return i.due_at < horizon;
+          return i.source === 'manual';
+        })
+        .slice(0, 12)
         .map((i) => ({
           item_id: i.id,
           title: `${i.course_code ? `[${i.course_code}] ` : ''}${i.title}`,
           kind: i.kind,
           points: i.points,
           estimate_min: i.estimate_min,
+          overdue: !!(i.due_at && i.due_at < now),
           due: i.due_at ? new Date(i.due_at).toString().slice(0, 21) : null,
         }));
-      if (!tasks.length) return fail(res, new Error('nothing undone to plan'), 400);
+      if (!tasks.length) return fail(res, new Error('nothing due soon to plan — the radar is clear for the next few days'), 400);
 
       const busy = db.db.prepare(
         `SELECT title, due_at, raw FROM items
