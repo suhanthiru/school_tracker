@@ -72,7 +72,8 @@ async function boot() {
     sync = require('./lib/sync');
     scheduler = require('./lib/scheduler');
 
-    const started = await server.start(0);
+    // Random loopback port normally; SCHOOL_TRACKER_PORT pins it (debugging).
+    const started = await server.start(Number(process.env.SCHOOL_TRACKER_PORT || 0));
     serverPort = started.port;
   } catch (err) {
     dialog.showErrorBox('School Tracker', `Could not start the app:\n\n${err.message}`);
