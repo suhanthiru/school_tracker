@@ -87,6 +87,16 @@ async function boot() {
   registerCaptureHotkey();
   scheduler.start();
 
+  // Belt and suspenders for the SSO sessions: flush their cookie jars to
+  // disk every few minutes so no kind of exit loses a login.
+  const flushSessions = () => {
+    for (const svc of Object.values(SSO_SERVICES)) {
+      try { session.fromPartition(svc.partition).flushStorageData(); } catch { /* best effort */ }
+    }
+  };
+  const flushTimer = setInterval(flushSessions, 5 * 60 * 1000);
+  if (flushTimer.unref) flushTimer.unref();
+
   maybeShowDaily(!startHidden);
 
   app.on('activate', () => { showWindow(); });
@@ -272,6 +282,9 @@ function openSsoLogin(service) {
     try { u = new URL(url); } catch { return; }
     if (!svc.isDashboard(u)) return;
     db.setSetting(svc.stateKey, 'ok');
+    // Chromium writes cookies lazily; force them to disk NOW so a later
+    // crash or kill cannot eat the session the user just signed into.
+    session.fromPartition(svc.partition).flushStorageData();
     setTimeout(() => { if (ssoWins[service]) ssoWins[service].close(); }, 700);
     sync.syncOne(service).catch((err) => console.error(`[${service} first sync]`, err));
   };
