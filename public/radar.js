@@ -52,10 +52,11 @@ App.views.radar = {
             App.courses.map((c) => `<option value="${c.id}" ${String(c.id) === v.filterCourse ? 'selected' : ''}>${App.esc(c.code || c.name)}</option>`).join('')
           }</select>
           <select id="f-source"><option value="">all sources</option>${
-            ['canvas', 'gradescope', 'ed', 'gcal', 'manual'].map((s) => `<option value="${s}" ${s === v.filterSource ? 'selected' : ''}>${App.sourceName(s)}</option>`).join('')
+            ['canvas', 'gradescope', 'ed', 'gcal', 'syllabus', 'manual'].map((s) => `<option value="${s}" ${s === v.filterSource ? 'selected' : ''}>${App.sourceName(s)}</option>`).join('')
           }</select>
           <input id="f-q" placeholder="filter…" value="${App.esc(v.query)}" style="width:110px">
           <label class="check"><input type="checkbox" id="f-done" ${v.showDone ? 'checked' : ''}> done</label>
+          <button class="btn" id="open-syllabus" title="import a course syllabus">📄 Syllabus</button>
         </div>
       </div>
       ${App.views.radar.statsHtml()}`;
@@ -144,6 +145,7 @@ App.views.radar = {
       } catch (err) { alert(err.message); }
     });
 
+    App.$('#open-syllabus', root).addEventListener('click', () => Syllabus.open());
     App.$('#f-course', root).addEventListener('change', (e) => { v.filterCourse = e.target.value; v.render(); });
     App.$('#f-source', root).addEventListener('change', (e) => { v.filterSource = e.target.value; v.render(); });
     App.$('#f-done', root).addEventListener('change', (e) => { v.showDone = e.target.checked; v.render(); });

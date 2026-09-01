@@ -226,6 +226,19 @@ function wireBridge() {
   });
 
   bridge.on('hotkey-changed', registerCaptureHotkey);
+
+  bridge.on('syllabus-pick', ({ onFile }) => {
+    dialog.showOpenDialog({
+      title: 'Choose a syllabus',
+      filters: [
+        { name: 'Syllabus', extensions: ['pdf', 'docx', 'txt', 'md'] },
+        { name: 'All files', extensions: ['*'] },
+      ],
+      properties: ['openFile'],
+    }).then(({ canceled, filePaths }) => {
+      if (!canceled && filePaths[0]) onFile(filePaths[0]);
+    }).catch((err) => console.error('[syllabus pick]', err));
+  });
 }
 
 // ---------- SSO login windows (Gradescope, Canvas) ----------

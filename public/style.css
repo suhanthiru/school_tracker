@@ -159,6 +159,7 @@ label.check { display: flex; align-items: center; gap: 5px; color: var(--dim); f
 .chip.src-ed { color: var(--purple); }
 .chip.src-gcal { color: #8fc98f; }
 .chip.src-manual { color: var(--dim); }
+.chip.src-syllabus { color: #c9a86a; }
 .chip.pts { color: var(--faint); }
 .chip.submitted { color: var(--ok); border-color: #2b4636; }
 .chip.est { cursor: pointer; }

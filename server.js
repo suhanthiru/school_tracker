@@ -319,6 +319,24 @@ function createApp() {
     ok(res, { disconnected: true });
   });
 
+  // ---------- syllabus ----------
+
+  const syllabus = require('./lib/syllabus');
+
+  app.post('/api/syllabus/import', async (req, res) => {
+    try {
+      const { text, course_id = null } = req.body || {};
+      ok(res, await syllabus.importText(text, course_id ? Number(course_id) : null));
+    } catch (err) { fail(res, err, 400); }
+  });
+
+  // Desktop only: opens a native file dialog; result arrives as a toast.
+  app.post('/api/syllabus/pick', (req, res) => {
+    const { course_id = null } = req.body || {};
+    syllabus.pickAndImport(course_id ? Number(course_id) : null);
+    ok(res, { picking: true });
+  });
+
   // ---------- digest ----------
 
   app.post('/api/digest/send', async (req, res) => {

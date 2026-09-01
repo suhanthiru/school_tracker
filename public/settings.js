@@ -3,6 +3,54 @@
 // Settings modal + first-run onboarding. Test buttons save first, then make
 // one live read-only call so a bad token is caught at paste time.
 
+const Syllabus = {
+  wired: false,
+
+  open() {
+    const sel = App.$('#syl-course');
+    sel.innerHTML = '<option value="">(no course)</option>' + App.courses
+      .map((c) => `<option value="${c.id}">${App.esc(c.code || c.name)}</option>`).join('');
+    App.$('#syl-result').textContent = '';
+    App.$('#syl-file').classList.toggle('hidden', !(App.meta && App.meta.claude));
+    App.$('#syllabus-modal').classList.remove('hidden');
+    Syllabus.wire();
+  },
+
+  wire() {
+    if (Syllabus.wired) return;
+    Syllabus.wired = true;
+
+    App.$('#close-syllabus').addEventListener('click', () =>
+      App.$('#syllabus-modal').classList.add('hidden'));
+
+    App.$('#syl-import').addEventListener('click', async () => {
+      const out = App.$('#syl-result');
+      const text = App.$('#syl-text').value;
+      if (!text.trim()) { out.textContent = 'paste the syllabus text first'; out.className = 'test-result err'; return; }
+      out.textContent = App.meta && App.meta.claude ? 'reading with AI…' : 'scanning for dates…';
+      out.className = 'test-result';
+      try {
+        const r = await App.api('/api/syllabus/import', { method: 'POST', body: {
+          text, course_id: App.$('#syl-course').value || null,
+        } });
+        out.textContent = `${r.total} items (${r.added} new, ${r.updated} updated)`;
+        out.className = 'test-result ok';
+        App.$('#syl-text').value = '';
+        App.refresh().catch(() => {});
+      } catch (err) {
+        out.textContent = err.message;
+        out.className = 'test-result err';
+      }
+    });
+
+    App.$('#syl-file').addEventListener('click', async () => {
+      await App.api('/api/syllabus/pick', { method: 'POST', body: { course_id: App.$('#syl-course').value || null } });
+      App.$('#syl-result').textContent = 'choose the file in the dialog — result arrives as a toast';
+      App.$('#syl-result').className = 'test-result';
+    });
+  },
+};
+
 const Settings = {
   data: null,
 

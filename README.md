@@ -18,6 +18,9 @@ Google Calendar, Ed, and Perusall sneaks up on you.
   due, when new assignments appear, and if the Gradescope session expires.
 - **Global quick capture** — `Ctrl+Shift+Space` anywhere in Windows to jot a
   task before the thought escapes.
+- **Syllabus import** — paste a syllabus (or point the Claude CLI at the PDF)
+  and every dated pset, project, and exam lands on the radar up front, before
+  professors ever post them to Canvas.
 - Statuses (not started / in progress / done) are yours: they survive every
   re-sync. Manual tasks (research, personal) are first-class.
 

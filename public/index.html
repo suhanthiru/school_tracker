@@ -41,6 +41,26 @@
   </div>
 </div>
 
+<!-- Syllabus import -->
+<div id="syllabus-modal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title">Import a syllabus</div>
+      <button class="btn ghost" id="close-syllabus">✕</button>
+    </div>
+    <div class="set-hint">Every dated deliverable in the syllabus — psets, projects, exams — lands on the radar. Re-importing an updated syllabus refreshes dates instead of duplicating.</div>
+    <div class="set-row">Course:
+      <select id="syl-course"><option value="">(none)</option></select>
+    </div>
+    <textarea id="syl-text" rows="10" style="width:100%" placeholder="Paste the syllabus text here…"></textarea>
+    <div class="set-row" style="justify-content:flex-end;margin-top:10px">
+      <span class="test-result" id="syl-result"></span>
+      <button class="btn hidden" id="syl-file">Choose PDF instead…</button>
+      <button class="btn primary" id="syl-import">Import</button>
+    </div>
+  </div>
+</div>
+
 <!-- First-run onboarding -->
 <div id="onboarding" class="modal hidden">
   <div class="modal-card wide">

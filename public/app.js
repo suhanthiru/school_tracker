@@ -69,7 +69,7 @@ const App = {
   },
 
   sourceName(s) {
-    return { canvas: 'Canvas', gcal: 'Calendar', ed: 'Ed', gradescope: 'Gradescope', manual: 'manual' }[s] || s;
+    return { canvas: 'Canvas', gcal: 'Calendar', ed: 'Ed', gradescope: 'Gradescope', manual: 'manual', syllabus: 'syllabus' }[s] || s;
   },
 
   // ---------- urgency ----------
