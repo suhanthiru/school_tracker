@@ -25,7 +25,7 @@ Google Calendar, Ed, and Perusall sneaks up on you.
 
 | Source | How it connects |
 | --- | --- |
-| Canvas | Personal access token (Account → Settings → New Access Token). Official API. Perusall/LTI assignments come through here. |
+| Canvas | Sign in once with your school login (GT blocks student access tokens; the app keeps the session and uses Canvas's own API with it). Schools that allow tokens can paste one instead. Perusall/LTI assignments come through here. |
 | Google Calendar | The calendar's "Secret address in iCal format" (Settings → Integrate calendar). No OAuth. |
 | Ed Discussions | API token (Settings → API Tokens). Announcements land in a rail; deadlines mentioned in them are extracted onto the radar. |
 | Gradescope | No API exists. The app opens a real sign-in window once (school SSO + Duo) and keeps the session. When it expires, you get a toast to reconnect. |

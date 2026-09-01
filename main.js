@@ -14,7 +14,33 @@ const server = require('./server');
 const bridge = require('./lib/bridge');
 
 const ICON_PATH = path.join(__dirname, 'assets', 'icon.png');
-const GRADESCOPE_PARTITION = 'persist:gradescope';
+
+// Services the app signs into with a real login window (school SSO + Duo),
+// keeping the session in a persistent partition. Canvas is here because GT
+// blocks student-created access tokens; its REST API accepts the session.
+const SSO_SERVICES = {
+  gradescope: {
+    label: 'Gradescope',
+    partition: 'persist:gradescope',
+    stateKey: 'gradescope_state',
+    loginUrl: () => 'https://www.gradescope.com/login',
+    isDashboard: (u) => /(^|\.)gradescope\.com$/.test(u.hostname)
+      && ['/', '/account', '/home'].includes(u.pathname),
+  },
+  canvas: {
+    label: 'Canvas',
+    partition: 'persist:canvas',
+    stateKey: 'canvas_state',
+    loginUrl: () => `${String(db.getSetting('canvas_base_url', '')).replace(/\/+$/, '')}/login`,
+    isDashboard: (u) => {
+      try {
+        const base = new URL(db.getSetting('canvas_base_url', ''));
+        return u.hostname === base.hostname
+          && (u.pathname === '/' || u.pathname === '/dashboard' || u.pathname.startsWith('/?'));
+      } catch { return false; }
+    },
+  },
+};
 
 let db = null;
 let sync = null;
@@ -23,7 +49,7 @@ let scheduler = null;
 let win = null;
 let tray = null;
 let captureWin = null;
-let gsWin = null;
+const ssoWins = {};
 let serverPort = null;
 let quitting = false;
 
@@ -190,51 +216,53 @@ function wireBridge() {
     n.show();
   });
 
-  bridge.on('gradescope-login', openGradescopeLogin);
+  bridge.on('sso-login', (service) => openSsoLogin(service));
 
-  bridge.on('gradescope-logout', () => {
-    session.fromPartition(GRADESCOPE_PARTITION).clearStorageData()
-      .catch((err) => console.error('[gradescope logout]', err));
+  bridge.on('sso-logout', (service) => {
+    const svc = SSO_SERVICES[service];
+    if (!svc) return;
+    session.fromPartition(svc.partition).clearStorageData()
+      .catch((err) => console.error(`[${service} logout]`, err));
   });
 
   bridge.on('hotkey-changed', registerCaptureHotkey);
 }
 
-// ---------- Gradescope SSO window ----------
+// ---------- SSO login windows (Gradescope, Canvas) ----------
 
-function openGradescopeLogin() {
-  if (gsWin) { gsWin.focus(); return; }
+function openSsoLogin(service) {
+  const svc = SSO_SERVICES[service];
+  if (!svc) return;
+  if (ssoWins[service]) { ssoWins[service].focus(); return; }
 
-  gsWin = new BrowserWindow({
+  const w = ssoWins[service] = new BrowserWindow({
     width: 520,
     height: 720,
-    title: 'Sign in to Gradescope',
+    title: `Sign in to ${svc.label}`,
     autoHideMenuBar: true,
     webPreferences: {
-      partition: GRADESCOPE_PARTITION,
+      partition: svc.partition,
       contextIsolation: true,
       nodeIntegration: false,
     },
   });
 
-  gsWin.loadURL('https://www.gradescope.com/login');
+  w.loadURL(svc.loginUrl());
 
-  // GT SSO + Duo bounce through several hosts; success is landing back on the
-  // Gradescope dashboard.
+  // School SSO + Duo bounce through several hosts; success is landing back on
+  // the service's own dashboard.
   const onNav = (_e, url) => {
     let u;
     try { u = new URL(url); } catch { return; }
-    if (!/(^|\.)gradescope\.com$/.test(u.hostname)) return;
-    if (u.pathname === '/' || u.pathname === '/account' || u.pathname === '/home') {
-      db.setSetting('gradescope_state', 'ok');
-      setTimeout(() => { if (gsWin) gsWin.close(); }, 700);
-      sync.syncOne('gradescope').catch((err) => console.error('[gradescope first sync]', err));
-    }
+    if (!svc.isDashboard(u)) return;
+    db.setSetting(svc.stateKey, 'ok');
+    setTimeout(() => { if (ssoWins[service]) ssoWins[service].close(); }, 700);
+    sync.syncOne(service).catch((err) => console.error(`[${service} first sync]`, err));
   };
-  gsWin.webContents.on('did-navigate', onNav);
-  gsWin.webContents.on('did-redirect-navigation', onNav);
+  w.webContents.on('did-navigate', onNav);
+  w.webContents.on('did-redirect-navigation', onNav);
 
-  gsWin.on('closed', () => { gsWin = null; });
+  w.on('closed', () => { ssoWins[service] = null; });
 }
 
 // ---------- quick capture ----------

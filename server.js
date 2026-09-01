@@ -31,6 +31,7 @@ function createApp() {
         report: sync.readReport(),
         sources: sync.sourceStates(),
         gradescopeState: db.getSetting('gradescope_state', 'never'),
+        canvasState: db.getSetting('canvas_state', 'never'),
         claude: ai.claudeAvailable(),
         aiQueue: ai.queueDepth(),
         stats: db.stats(),
@@ -228,6 +229,7 @@ function createApp() {
       for (const k of PLAIN_SETTINGS) out[k] = db.getSetting(k, '');
       for (const k of secrets.SECRET_KEYS) out[`has_${k}`] = secrets.hasSecret(k);
       out.gradescope_state = db.getSetting('gradescope_state', 'never');
+      out.canvas_state = db.getSetting('canvas_state', 'never');
       ok(res, out);
     } catch (err) { fail(res, err); }
   });
@@ -253,15 +255,15 @@ function createApp() {
     const source = req.params.source;
     try {
       if (source === 'canvas') {
-        const base = String(db.getSetting('canvas_base_url', '')).replace(/\/+$/, '');
         const token = secrets.getSecret('canvas_token');
-        if (!token) throw new Error('paste a Canvas token first');
-        const r = await fetch(`${base}/api/v1/users/self`, {
-          headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(20000),
+        if (!token && db.getSetting('canvas_state', 'never') === 'never') {
+          throw new Error('paste a token or use "Connect with school login" first');
+        }
+        const canvasAdapter = require('./lib/sources/canvas');
+        const user = await canvasAdapter.whoami({
+          baseUrl: db.getSetting('canvas_base_url'), token,
         });
-        if (!r.ok) throw new Error(r.status === 401 ? 'token rejected' : `HTTP ${r.status}`);
-        const user = await r.json();
-        return ok(res, { ok: true, detail: `authenticated as ${user.name || user.id}` });
+        return ok(res, { ok: true, detail: `authenticated as ${user.name || user.id}${token ? '' : ' (school login)'}` });
       }
       if (source === 'gcal') {
         const url = secrets.getSecret('gcal_ics_url');
@@ -299,21 +301,22 @@ function createApp() {
     }
   });
 
-  // ---------- gradescope ----------
+  // ---------- SSO sessions (gradescope, canvas) ----------
 
-  app.post('/api/gradescope/connect', (req, res) => {
-    bridge.emit('gradescope-login');
+  const SSO = { gradescope: 'gradescope_state', canvas: 'canvas_state' };
+
+  app.post('/api/sso/:service/connect', (req, res) => {
+    if (!SSO[req.params.service]) return fail(res, new Error('unknown service'), 400);
+    bridge.emit('sso-login', req.params.service);
     ok(res, { opening: true });
   });
 
-  app.post('/api/gradescope/disconnect', (req, res) => {
-    bridge.emit('gradescope-logout');
-    db.setSetting('gradescope_state', 'never');
+  app.post('/api/sso/:service/disconnect', (req, res) => {
+    const stateKey = SSO[req.params.service];
+    if (!stateKey) return fail(res, new Error('unknown service'), 400);
+    bridge.emit('sso-logout', req.params.service);
+    db.setSetting(stateKey, 'never');
     ok(res, { disconnected: true });
-  });
-
-  app.get('/api/gradescope/status', (req, res) => {
-    ok(res, { state: db.getSetting('gradescope_state', 'never') });
   });
 
   // ---------- digest ----------

@@ -30,9 +30,16 @@ const Settings = {
     return `
     <div class="set-section">
       <h3>Canvas</h3>
-      <div class="set-hint">Canvas → Account → Settings → <b>+ New Access Token</b> (leave expiry blank). Covers assignments, quizzes, due dates, and submission status — Perusall items come through here too.</div>
+      <div class="set-hint">Covers assignments, quizzes, due dates, and submission status — Perusall items come through here too. <b>Georgia Tech blocks student access tokens</b>, so sign in with your school login instead; the token field is for schools that allow tokens.</div>
       <div class="set-row"><input type="text" data-plain="canvas_base_url" value="${App.esc(d.canvas_base_url)}" style="width:280px" title="Canvas base URL"></div>
-      <div class="set-row">${Settings.secretField('canvas_token', 'paste Canvas access token')}
+      <div class="set-row">
+        <span class="${d.canvas_state === 'ok' ? 'test-result ok' : 'dim'}" style="font-size:12.5px">
+          ${d.canvas_state === 'ok' ? 'Signed in ✓' : d.canvas_state === 'expired' ? 'Session expired' : 'Not signed in'}
+        </span>
+        <button class="btn" data-sso="canvas" data-sso-act="connect">${d.canvas_state === 'ok' ? 'Reconnect' : 'Connect with school login'}</button>
+        ${d.canvas_state !== 'never' ? '<button class="btn ghost" data-sso="canvas" data-sso-act="disconnect">Disconnect</button>' : ''}
+      </div>
+      <div class="set-row">${Settings.secretField('canvas_token', 'or paste an access token (if your school allows them)')}
         <button class="btn" data-test="canvas">Test</button><span class="test-result" id="test-canvas"></span></div>
     </div>
 
@@ -58,8 +65,8 @@ const Settings = {
         <span class="${gsState === 'ok' ? 'test-result ok' : 'dim'}" style="font-size:12.5px">
           ${gsState === 'ok' ? 'Connected ✓' : gsState === 'expired' ? 'Session expired' : 'Not connected'}
         </span>
-        <button class="btn" data-gs="connect">${gsState === 'ok' ? 'Reconnect' : 'Connect Gradescope'}</button>
-        ${gsState !== 'never' ? '<button class="btn ghost" data-gs="disconnect">Disconnect</button>' : ''}
+        <button class="btn" data-sso="gradescope" data-sso-act="connect">${gsState === 'ok' ? 'Reconnect' : 'Connect Gradescope'}</button>
+        ${gsState !== 'never' ? '<button class="btn ghost" data-sso="gradescope" data-sso-act="disconnect">Disconnect</button>' : ''}
         <button class="btn" data-test="gradescope">Test</button><span class="test-result" id="test-gradescope"></span>
       </div>
     </div>
@@ -149,12 +156,13 @@ const Settings = {
       });
     }
 
-    for (const btn of App.$$('[data-gs]', root)) {
+    for (const btn of App.$$('[data-sso]', root)) {
       btn.addEventListener('click', async () => {
-        if (btn.dataset.gs === 'connect') {
-          await App.api('/api/gradescope/connect', { method: 'POST' });
+        const service = btn.dataset.sso;
+        if (btn.dataset.ssoAct === 'connect') {
+          await App.api(`/api/sso/${service}/connect`, { method: 'POST' });
         } else {
-          await App.api('/api/gradescope/disconnect', { method: 'POST' });
+          await App.api(`/api/sso/${service}/disconnect`, { method: 'POST' });
           Settings.open();
         }
       });
