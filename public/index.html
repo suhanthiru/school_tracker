@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>School Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header id="topbar">
+  <div class="brand">School Tracker</div>
+  <nav id="tabs">
+    <button data-tab="radar" class="tab active">Radar</button>
+    <button data-tab="week" class="tab">Week</button>
+    <button data-tab="planner" class="tab">Planner</button>
+  </nav>
+  <div class="spacer"></div>
+  <div id="health-strip" title="per-source sync health"></div>
+  <div id="last-sync" class="dim"></div>
+  <button id="sync-now" class="btn">Sync</button>
+  <button id="open-settings" class="btn ghost" title="Settings">⚙</button>
+</header>
+
+<main>
+  <section id="view-radar" class="view"></section>
+  <section id="view-week" class="view hidden"></section>
+  <section id="view-planner" class="view hidden"></section>
+</main>
+
+<div id="toast-strip"></div>
+
+<!-- Settings modal -->
+<div id="settings-modal" class="modal hidden">
+  <div class="modal-card">
+    <div class="modal-head">
+      <div class="modal-title">Settings</div>
+      <button class="btn ghost" id="close-settings">✕</button>
+    </div>
+    <div id="settings-body"></div>
+  </div>
+</div>
+
+<!-- First-run onboarding -->
+<div id="onboarding" class="modal hidden">
+  <div class="modal-card wide">
+    <div id="onboarding-body"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script src="radar.js"></script>
+<script src="week.js"></script>
+<script src="planner.js"></script>
+<script src="settings.js"></script>
+<script>App.boot();</script>
+</body>
+</html>

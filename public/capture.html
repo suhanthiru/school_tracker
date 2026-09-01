@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Quick add</title>
+<style>
+  html, body { margin: 0; background: #151a22; overflow: hidden; }
+  #wrap { display: flex; align-items: center; gap: 10px; padding: 14px 16px; }
+  #mark { color: #4c8fe8; font: 700 18px "Segoe UI", system-ui; user-select: none; }
+  input {
+    flex: 1; background: none; border: none; outline: none;
+    color: #dce3ec; font: 15px "Segoe UI", system-ui, sans-serif;
+  }
+  input::placeholder { color: #5c6674; }
+  #hint { color: #5c6674; font: 10.5px "Segoe UI", system-ui; user-select: none; white-space: nowrap; }
+  #hint.ok { color: #4caf7d; }
+</style>
+</head>
+<body>
+<div id="wrap">
+  <span id="mark">＋</span>
+  <input id="box" placeholder='capture a task… "email prof about regrade by thu"' autocomplete="off" autofocus>
+  <span id="hint">Enter to save · Esc to close</span>
+</div>
+<script>
+  const box = document.getElementById('box');
+  const hint = document.getElementById('hint');
+  box.focus();
+
+  box.addEventListener('keydown', async (e) => {
+    if (e.key === 'Escape') { window.close(); return; }
+    if (e.key !== 'Enter' || !box.value.trim()) return;
+    try {
+      const res = await fetch('/api/capture', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: box.value.trim() }),
+      });
+      const item = await res.json();
+      if (!res.ok) throw new Error(item.error || 'failed');
+      hint.textContent = item.due_at ? `saved — due ${new Date(item.due_at).toLocaleString()}` : 'saved ✓';
+      hint.className = 'ok';
+      box.value = '';
+      setTimeout(() => window.close(), 650);
+    } catch (err) {
+      hint.textContent = err.message;
+    }
+  });
+</script>
+</body>
+</html>
