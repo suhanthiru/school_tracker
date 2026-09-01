@@ -63,7 +63,7 @@ App.views.planner = {
         <div class="rail-head">Drag onto a day</div>
         ${rail.map((i) => `
           <div class="rail-item" draggable="true" data-drag='${App.esc(JSON.stringify({ type: 'item', id: i.id }))}'>
-            ${App.esc(i.title)}
+            ${App.esc(i.title)}${i.url ? ` <a class="row-link" href="${App.esc(i.url)}" target="_blank" title="open the assignment">↗</a>` : ''}
             <div class="r-meta">${[i.course_code, i.due_at ? 'due ' + App.fmtDue(i.due_at, i.all_day) : null, i.estimate_min ? i.estimate_min + 'm' : null].filter(Boolean).join(' · ')}</div>
           </div>`).join('') || '<div class="faint" style="font-size:12px">Nothing undone — enjoy.</div>'}
       </div>
@@ -144,6 +144,7 @@ App.views.planner = {
           <div class="b-meta">
             <input type="checkbox" data-check="${b.id}" ${done ? 'checked' : ''} title="done">
             ${b.course_code ? App.esc(b.course_code) + ' · ' : ''}${b.duration_min}m
+            ${b.item_url ? `<a class="row-link" href="${App.esc(b.item_url)}" target="_blank" title="open the assignment">↗</a>` : ''}
           </div>
           <span class="b-x" data-del="${b.id}">✕</span>
           <div class="b-resize" data-resize="${b.id}"></div>

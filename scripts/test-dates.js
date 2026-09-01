@@ -51,6 +51,19 @@ check('deadline extended to monday', dates.extractSingle('deadline extended to M
   const r = dates.parseCapture('email prof about regrade tomorrow', NOW);
   check('capture: tomorrow', r.due_at, at(2026, 9, 1));
 }
+{
+  const r = dates.parseCapture('do quiz 3 https://canvas.gatech.edu/courses/12/quizzes/9 by fri', NOW);
+  check('capture: url + date', r.due_at, at(2026, 9, 4));
+  if (r.url !== 'https://canvas.gatech.edu/courses/12/quizzes/9') { failures++; console.error(`FAIL capture url: "${r.url}"`); }
+  else console.log('ok   capture: url extracted');
+  if (r.title !== 'do quiz 3') { failures++; console.error(`FAIL capture url title: "${r.title}"`); }
+  else console.log('ok   capture: url stripped from title');
+}
+{
+  // digits inside a URL must not be read as a date
+  const r = dates.parseCapture('review https://example.com/2026/09/15/post', NOW);
+  check('capture: url digits not a date', r.due_at, null);
+}
 
 // keyword gate
 for (const [text, expect] of [

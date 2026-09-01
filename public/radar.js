@@ -144,6 +144,7 @@ App.views.radar = {
       ${i.submitted === true ? '<span class="chip submitted">submitted ✓</span>' : ''}
       <span class="chip est" data-act="estimate" title="time estimate — feeds Plan my day">${est}</span>
       <span class="i-due ${dueCls}">${App.fmtDue(i.due_at, i.all_day)}</span>
+      ${i.url ? `<a class="row-link" href="${App.esc(i.url)}" target="_blank" title="open the assignment">↗</a>` : '<span class="row-link-gap"></span>'}
       <button class="row-x" data-act="remove" title="${i.source === 'manual' ? 'delete task' : 'hide from radar'}">✕</button>
     </div>`;
   },

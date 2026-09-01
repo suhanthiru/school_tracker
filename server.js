@@ -70,7 +70,7 @@ function createApp() {
 
   app.post('/api/items', (req, res) => {
     try {
-      const { title, due_at = null, course_id = null, notes = '', estimate_min = null } = req.body || {};
+      const { title, due_at = null, course_id = null, notes = '', estimate_min = null, url = null } = req.body || {};
       if (!String(title || '').trim()) return fail(res, new Error('title is required'), 400);
       ok(res, db.createManualItem({
         title: String(title).trim(),
@@ -78,6 +78,7 @@ function createApp() {
         course_id: course_id === null ? null : Number(course_id),
         notes: String(notes || ''),
         estimate_min: estimate_min === null ? null : Number(estimate_min),
+        url: url ? String(url) : null,
       }));
     } catch (err) { fail(res, err); }
   });
@@ -87,7 +88,7 @@ function createApp() {
     try {
       const parsed = dates.parseCapture(String((req.body || {}).text || ''));
       if (!parsed.title) return fail(res, new Error('nothing to capture'), 400);
-      ok(res, db.createManualItem({ title: parsed.title, due_at: parsed.due_at }));
+      ok(res, db.createManualItem({ title: parsed.title, due_at: parsed.due_at, url: parsed.url }));
     } catch (err) { fail(res, err); }
   });
 
