@@ -52,7 +52,7 @@ App.views.week = {
           </div>
           ${dayItems.map((i) => {
             const t = i.all_day ? '' : new Date(i.due_at).toLocaleTimeString(undefined, { hour: 'numeric', minute: i.due_at % 3600000 ? '2-digit' : undefined }).toLowerCase().replace(' ', '');
-            const done = i.status === 'done' || i.submitted === true;
+            const done = i.status === 'done' || i.submitted_any;
             return `<div class="wk-item ${done ? 'done-row' : ''}" title="${App.esc(i.title)}${i.course_code ? ' — ' + App.esc(i.course_code) : ''}">
               <span class="dot" style="background:${sourceDot[i.source] || '#666'}"></span>
               ${t ? `<span class="wk-time">${t}</span>` : ''}

@@ -77,7 +77,7 @@ const App = {
   urgency(item) {
     if (!item.due_at || item.status === 'done') return -1;
     const hours = (item.due_at - Date.now()) / 3600000;
-    if (item.submitted === true) return -1;
+    if (item.submitted_any) return -1;
     let score = 0;
     if (hours < 0) score += 55 + Math.max(-20, hours / 24);       // overdue, decaying
     else score += Math.max(0, 48 - hours) * 1.6;                  // proximity ramp

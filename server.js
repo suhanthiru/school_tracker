@@ -169,7 +169,7 @@ function createApp() {
       // business in today's plan.
       const horizon = dayEnd + 2 * 24 * 3600 * 1000;
       const tasks = db.listItems({ kinds: ['assignment', 'quiz', 'task'] })
-        .filter((i) => i.submitted !== true)
+        .filter((i) => !i.submitted_any)
         .filter((i) => {
           if (i.status === 'in_progress') return true;
           if (i.due_at !== null) return i.due_at < horizon;

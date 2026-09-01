@@ -26,7 +26,7 @@ App.views.radar = {
       items = items.filter((i) => i.title.toLowerCase().includes(q));
     }
 
-    const isDone = (i) => i.status === 'done' || (treatSubmitted && i.submitted === true);
+    const isDone = (i) => i.status === 'done' || (treatSubmitted && i.submitted_any);
     const active = items.filter((i) => !isDone(i));
     const doneItems = items.filter(isDone);
 
@@ -139,9 +139,12 @@ App.views.radar = {
       <span class="i-title">${i.url ? `<a href="${App.esc(i.url)}" target="_blank">${App.esc(i.title)}</a>` : App.esc(i.title)}</span>
       ${i.course_code ? `<span class="chip course">${App.esc(i.course_code)}</span>` : ''}
       <span class="chip src-${i.source}">${App.sourceName(i.source)}</span>
+      ${(i.also || []).map((a) => a.url
+        ? `<a class="chip src-${a.source}" href="${App.esc(a.url)}" target="_blank" title="also on ${App.sourceName(a.source)} — open">${App.sourceName(a.source)}</a>`
+        : `<span class="chip src-${a.source}" title="also on ${App.sourceName(a.source)}">${App.sourceName(a.source)}</span>`).join('')}
       ${i.kind === 'quiz' ? '<span class="chip">quiz</span>' : ''}
       ${i.points ? `<span class="chip pts">${i.points}pt</span>` : ''}
-      ${i.submitted === true ? '<span class="chip submitted">submitted ✓</span>' : ''}
+      ${i.submitted_any ? '<span class="chip submitted">submitted ✓</span>' : ''}
       <span class="chip est" data-act="estimate" title="time estimate — feeds Plan my day">${est}</span>
       <span class="i-due ${dueCls}">${App.fmtDue(i.due_at, i.all_day)}</span>
       ${i.url ? `<a class="row-link" href="${App.esc(i.url)}" target="_blank" title="open the assignment">↗</a>` : '<span class="row-link-gap"></span>'}

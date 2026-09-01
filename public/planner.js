@@ -49,7 +49,7 @@ App.views.planner = {
     // Rail: undone work, most urgent first.
     const rail = App.items
       .filter((i) => ['assignment', 'quiz', 'task'].includes(i.kind))
-      .filter((i) => i.status !== 'done' && i.submitted !== true)
+      .filter((i) => i.status !== 'done' && !i.submitted_any)
       .sort((a, b) => App.urgency(b) - App.urgency(a))
       .slice(0, 40);
 
