@@ -228,6 +228,8 @@ function wireBridge() {
 
   bridge.on('hotkey-changed', registerCaptureHotkey);
 
+  bridge.on('quit', () => { quitting = true; app.quit(); });
+
   bridge.on('syllabus-pick', ({ onFile }) => {
     dialog.showOpenDialog({
       title: 'Choose a syllabus',

@@ -58,8 +58,7 @@ App.views.radar = {
           <label class="check"><input type="checkbox" id="f-done" ${v.showDone ? 'checked' : ''}> done</label>
           <button class="btn" id="open-syllabus" title="import a course syllabus">📄 Syllabus</button>
         </div>
-      </div>
-      ${App.views.radar.statsHtml()}`;
+      </div>`;
 
     let any = false;
     for (const g of groups) {
@@ -95,22 +94,6 @@ App.views.radar = {
 
     root.innerHTML = html;
     App.views.radar.wire(root);
-  },
-
-  statsHtml() {
-    const stats = App.meta && App.meta.stats;
-    if (!stats) return '';
-    const bars = (stats.perCourse || []).slice(0, 6).map((c) => {
-      const pct = c.total ? Math.round((c.done / c.total) * 100) : 0;
-      return `<div class="course-bar">
-        <div class="cb-head"><span>${App.esc(c.code || c.name)}</span><span>${c.done}/${c.total}</span></div>
-        <div class="cb-track"><div class="cb-fill" style="width:${pct}%"></div></div>
-      </div>`;
-    }).join('');
-    return `<div id="stats-panel">
-      <div><div class="stat-big">${stats.completedThisWeek}</div><div class="stat-label">done this week</div></div>
-      ${bars}
-    </div>`;
   },
 
   rowHtml(i, nextUp, muted = false) {

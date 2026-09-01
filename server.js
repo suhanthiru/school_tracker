@@ -319,6 +319,14 @@ function createApp() {
     ok(res, { disconnected: true });
   });
 
+  // Graceful shutdown (loopback-only server, so this is local by definition).
+  // A force-killed Electron can lose freshly-written session cookies; this
+  // path flushes them properly.
+  app.post('/api/quit', (req, res) => {
+    ok(res, { quitting: true });
+    setTimeout(() => bridge.emit('quit'), 150);
+  });
+
   // ---------- syllabus ----------
 
   const syllabus = require('./lib/syllabus');
