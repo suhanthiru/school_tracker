@@ -1,0 +1,42 @@
+{
+  "name": "school-tracker",
+  "version": "1.0.0",
+  "description": "Consolidated school assignment tracker — Canvas, Gradescope, Google Calendar, Ed Discussions, manual tasks",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "server": "node server.js",
+    "setup": "npm install && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1",
+    "test": "node scripts/test-dates.js && node scripts/test-ics.js",
+    "dist": "electron-builder --win nsis"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "nodemailer": "^6.9.16"
+  },
+  "devDependencies": {
+    "electron": "^38.2.0",
+    "electron-builder": "^25.1.8"
+  },
+  "build": {
+    "appId": "com.suhan.school-tracker",
+    "productName": "School Tracker",
+    "files": [
+      "main.js",
+      "server.js",
+      "lib/**/*",
+      "public/**/*",
+      "assets/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": false
+    }
+  }
+}
