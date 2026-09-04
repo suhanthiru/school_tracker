@@ -28,6 +28,7 @@ body {
   color: var(--text);
   font: 14px/1.5 "Segoe UI", system-ui, sans-serif;
   overflow: hidden;
+  display: flex; flex-direction: column;
 }
 
 button { font: inherit; color: inherit; background: none; border: none; cursor: pointer; }
@@ -92,10 +93,27 @@ a:hover { color: var(--link); }
 
 /* ---------- layout ---------- */
 
-main { height: calc(100vh - 59px); overflow: hidden; }
+main { flex: 1; min-height: 0; overflow: hidden; }
 .view { height: 100%; overflow-y: auto; padding: 24px 28px 80px; }
 #view-radar { max-width: 1000px; margin: 0 auto; }
 #view-week { max-width: 1280px; margin: 0 auto; }
+
+/* ---------- alert bar ----------
+   A source that stopped syncing must never fail quietly: if Canvas is dead,
+   the radar is lying, and the whole point of this app is not having to go
+   check the sources yourself. */
+
+#alert-bar { flex: none; background: #2a1a17; border-bottom: 1px solid #5c352f; }
+.alert-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 22px; font-size: 13.5px;
+  border-top: 1px solid rgba(232, 112, 95, .14);
+}
+.alert-row:first-child { border-top: none; }
+.alert-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); flex: none; }
+.alert-row b { color: #f0a396; }
+.alert-row .a-why { color: var(--dim); }
+.alert-row .a-actions { margin-left: auto; display: flex; gap: 8px; }
 
 /* ---------- toast strip ---------- */
 
@@ -183,6 +201,9 @@ label.check { display: flex; align-items: center; gap: 6px; color: var(--dim); f
 .i-meta .m-sep { margin: 0 7px; color: #38414f; }
 .m-course { color: #9db4d6; font-weight: 550; }
 .m-kind { color: var(--dim); }
+/* The LTI tool the work actually lives in (Perusall, a publisher platform):
+   the single most useful thing to know when opening an item. */
+.m-provider { color: #c58fd0; font-weight: 550; }
 .m-src.src-canvas { color: #cd8272; }
 .m-src.src-gradescope { color: #74b6cf; }
 .m-src.src-ed { color: var(--purple); }

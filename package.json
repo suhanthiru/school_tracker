@@ -8,7 +8,7 @@
     "start": "electron .",
     "server": "node server.js",
     "setup": "npm install && powershell -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1",
-    "test": "node scripts/test-dates.js && node scripts/test-ics.js",
+    "test": "node scripts/test-dates.js && node scripts/test-ics.js && node scripts/test-canvas.js",
     "dist": "electron-builder --win nsis"
   },
   "dependencies": {

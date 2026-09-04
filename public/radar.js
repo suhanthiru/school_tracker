@@ -143,6 +143,7 @@ App.views.radar = {
       : `<span class="m-src src-${s}">${App.sourceName(s)}</span>`;
     const meta = [
       i.course_code ? `<span class="m-course">${App.esc(i.course_code)}</span>` : null,
+      i.provider ? `<span class="m-provider">${App.esc(i.provider)}</span>` : null,
       [srcLink(i.source, i.url), ...(i.also || []).map((a) => srcLink(a.source, a.url))].join(' + '),
       i.kind === 'quiz' ? '<span class="m-kind">quiz/exam</span>' : null,
       i.points ? `<span>${i.points} pts</span>` : null,

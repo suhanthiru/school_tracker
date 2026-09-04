@@ -129,6 +129,45 @@ const App = {
 
   // ---------- chrome ----------
 
+  /**
+   * Sources that are configured but not delivering. A dead source is worse
+   * than no source: the radar looks complete while work piles up unseen.
+   */
+  alerts() {
+    const report = App.meta && App.meta.report;
+    if (!report || !report.sources) return [];
+    return report.sources
+      .filter((s) => !s.skipped && !s.ok)
+      .map((s) => ({
+        id: s.id,
+        label: s.label,
+        error: s.error || 'sync failed',
+        expired: /expired|reconnect/i.test(s.error || ''),
+        canReconnect: s.id === 'canvas' || s.id === 'gradescope',
+      }));
+  },
+
+  renderAlerts() {
+    const bar = App.$('#alert-bar');
+    const alerts = App.alerts();
+    bar.classList.toggle('hidden', !alerts.length);
+    if (!alerts.length) { bar.innerHTML = ''; return; }
+
+    bar.innerHTML = alerts.map((a) => `
+      <div class="alert-row">
+        <span class="alert-dot"></span>
+        <b>${App.esc(a.label)} isn't syncing</b>
+        <span class="a-why">${a.expired
+          ? 'the sign-in expired, so new work is not reaching your radar'
+          : App.esc(a.error)}</span>
+        <span class="a-actions">
+          ${a.canReconnect && a.expired
+            ? `<button class="btn primary" data-reconnect="${a.id}">Reconnect ${App.esc(a.label)}</button>`
+            : '<button class="btn" data-open-settings="1">Open settings</button>'}
+        </span>
+      </div>`).join('');
+  },
+
   renderChrome() {
     const meta = App.meta;
     if (!meta) return;
@@ -144,6 +183,8 @@ const App = {
       if (h.ok) return `<span class="health-chip ok" title="${App.esc((h.notes || []).join('; ') || 'ok')}">${s.label} ${h.matched}</span>`;
       return `<span class="health-chip err" title="${App.esc(h.error || '')}">${s.label} ✗</span>`;
     }).join('');
+
+    App.renderAlerts();
 
     const toasts = meta.recentToasts || [];
     App.$('#toast-strip').innerHTML = toasts
@@ -204,6 +245,19 @@ const App = {
     });
 
     App.$('#open-settings').addEventListener('click', () => Settings.open());
+
+    // One click from "Canvas is dead" to the sign-in window that fixes it.
+    App.$('#alert-bar').addEventListener('click', async (e) => {
+      const rc = e.target.closest('[data-reconnect]');
+      if (rc) {
+        rc.disabled = true;
+        rc.textContent = 'Opening sign-in…';
+        try { await App.api(`/api/sso/${rc.dataset.reconnect}/connect`, { method: 'POST' }); }
+        catch (err) { alert(err.message); }
+        return;
+      }
+      if (e.target.closest('[data-open-settings]')) Settings.open();
+    });
     App.$('#close-settings').addEventListener('click', () => Settings.close());
 
     window.addEventListener('hashchange', App.handleHash);
